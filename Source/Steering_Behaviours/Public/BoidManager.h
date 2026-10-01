@@ -21,6 +21,18 @@ public:
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	float SpawnRadius = 500.0f;
 
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	float NeighbourRadius = 900.0f;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	float SeperationWeight = 1.0f;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	float CohesionWeight = 1.0f;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	float AlignmentWeight = 1.0f;
+
 	USceneComponent* transform;
 
 	TArray<class ABoids*> MyBoids;
@@ -32,5 +44,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	TArray<class ABoids*>GetBoidNeighbourHood(class ABoids* thisBoid);
 
 };

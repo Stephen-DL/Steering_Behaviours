@@ -21,7 +21,7 @@ void ABoidManager::BeginPlay()
 	
 	for (int i = 0; i < SpawnCount; i++) 
 	{
-		FVector SpawnLocation = (FMath::VRand() * SpawnRadius) + GetActorLocation();
+		FVector SpawnLocation = (FMath::VRand() * FMath::RandRange(0.0f, SpawnRadius)) + GetActorLocation();
 		FRotator SpawnRotation = GetActorRotation();
 
 		ABoids* newboid = GetWorld()->SpawnActor<ABoids>(SpawnLocation, SpawnRotation);
@@ -33,5 +33,34 @@ void ABoidManager::BeginPlay()
 void ABoidManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	for (ABoids* Boid : MyBoids)
+	{
+		Boid->UpdateBoid(DeltaTime);
+	}
 }
+
+TArray<class ABoids*> ABoidManager::GetBoidNeighbourHood(ABoids* thisBoid) 
+{
+
+	TArray<class ABoids*> ReturnBoids;
+
+	for (ABoids* Boid : MyBoids) 
+	{
+		if (Boid == thisBoid || !Boid) 
+		{
+			continue;
+		}
+
+		float aDistance = (Boid->GetActorLocation() - thisBoid->GetActorLocation()).Size();
+		if (aDistance < NeighbourRadius) 
+		{
+			ReturnBoids.Add(Boid);
+		}
+
+	}
+
+	return ReturnBoids;
+}
+
+
 
