@@ -26,6 +26,7 @@ void ABoidManager::BeginPlay()
 
 		ABoids* newboid = GetWorld()->SpawnActor<ABoids>(SpawnLocation, SpawnRotation);
 		MyBoids.Add(newboid);
+		newboid->Manager = this;
 	}
 }
 
@@ -39,12 +40,18 @@ void ABoidManager::Tick(float DeltaTime)
 	}
 }
 
-TArray<class ABoids*> ABoidManager::GetBoidNeighbourHood(ABoids* thisBoid) 
+TArray<ABoids*> ABoidManager::GetBoidNeighbourHood(ABoids* thisBoid) 
 {
 
-	TArray<class ABoids*> ReturnBoids;
 
-	for (ABoids* Boid : MyBoids) 
+
+	TArray<ABoids*> ReturnBoids;
+	
+	if (!thisBoid) return ReturnBoids;
+
+
+
+	for (ABoids* Boid : MyBoids)
 	{
 		if (Boid == thisBoid || !Boid) 
 		{
@@ -59,7 +66,7 @@ TArray<class ABoids*> ABoidManager::GetBoidNeighbourHood(ABoids* thisBoid)
 
 	}
 
-	return ReturnBoids;
+	return MyBoids;
 }
 
 

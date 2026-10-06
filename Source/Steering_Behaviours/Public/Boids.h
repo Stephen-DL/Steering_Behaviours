@@ -17,7 +17,7 @@ public:
 
 	FVector currentVelocity = FVector::ZeroVector;
 
-	class AboidManager* Manager;
+	class ABoidManager* Manager;
 
 	float waitCounter = 0.0f;
 
