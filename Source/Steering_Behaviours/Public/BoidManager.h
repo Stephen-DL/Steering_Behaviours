@@ -15,23 +15,26 @@ public:
 	// Sets default values for this actor's properties
 	ABoidManager();
 
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	int SpawnCount = 30;
 
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float SpawnRadius = 500.0f;
 
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float NeighbourRadius = 900.0f;
 
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float SeperationWeight = 1.0f;
 
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float CohesionWeight = 1.0f;
 
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float AlignmentWeight = 1.0f;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float Speed = 100.0f;
 
 	USceneComponent* transform;
 
