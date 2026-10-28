@@ -3,6 +3,8 @@
 
 #include "Boids.h"
 #include "BoidManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 ABoids::ABoids()
@@ -36,6 +38,20 @@ FVector ABoids::Flee(FVector position)
 	FVector newVelocity = GetActorLocation() - position;
 	newVelocity.Normalize();
 	return newVelocity;
+}
+
+FVector ABoids::Wander(float Radius, float Distance, float Jitter)
+{
+	FVector myLocation = GetActorLocation();
+	if (FVector::Dist(myLocation, WanderDestination) < 100.0f) 
+	{
+		FVector projectedPos = myLocation + (GetActorForwardVector() * Distance);
+
+		WanderDestination = projectedPos + (FMath::VRand() * FMath::RandRange(0.0f, Jitter));
+	}
+
+	FVector jitterLocation = Seek(WanderDestination) + (FMath::VRand() * FMath::RandRange(0.0f, Jitter));
+	return jitterLocation;
 }
 
 FVector ABoids::Alignment(TArray<ABoids*> Neighbours)
@@ -100,6 +116,10 @@ void ABoids::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (Manager->DebugAvoidanceInfo)
+	{
+		DebugAvoidance();
+	}
 }
 
 void ABoids::UpdateBoid(float DeltaTime)
@@ -120,11 +140,39 @@ void ABoids::UpdateBoid(float DeltaTime)
 
 	targetVelocity.Normalize();
 
+	if (targetVelocity.Size() < 1.0f) 
+	{
+		targetVelocity += Wander(100.0f, 200.0f, 50.0f);
+		targetVelocity.Normalize();
+	}
+
 	FVector newForce = targetVelocity - currentVelocity;
 	currentVelocity += newForce * DeltaTime;
 
 	FVector location = GetActorLocation();
-	location += (currentVelocity * Speed * DeltaTime);
+	location += (currentVelocity * Manager->Speed * DeltaTime);
 
 	SetActorLocation(location);
+}
+
+void ABoids::DebugAvoidance()
+{
+	TArray<FVector> Rays = Manager->GetAvoidanceRays();
+
+	for (int x = 0; x < Rays.Num(); ++x)
+	{
+		float color = 255.0 * static_cast<float>(x) / static_cast<float>(Rays.Num());
+
+		FVector WorldSpaceRay = GetTransform().GetRotation().RotateVector(Rays[x]);
+		float Angle = FMath::Acos(FVector::DotProduct(WorldSpaceRay, GetActorForwardVector()));
+
+		if (FMath::RadiansToDegrees(Angle) < Manager->ViewAngle)
+		{
+			DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + WorldSpaceRay * Manager->AvoidanceViewDistance, FColor::Green);
+		}
+		else
+		{
+			DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + WorldSpaceRay * Manager->AvoidanceViewDistance, FColor::Red);
+		}
+	}
 }

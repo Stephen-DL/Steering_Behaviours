@@ -27,6 +27,9 @@ protected:
 	FVector Seek(FVector position);
 	FVector Flee(FVector position);
 
+	FVector Wander(float Radius, float Distance, float Jitter);
+	FVector WanderDestination;
+
 	FVector Alignment(TArray<ABoids*> Neighbours);
 	FVector Cohesion(TArray<ABoids*> Neighbours);
 	FVector Seperation(TArray<ABoids*> Neighbours);
@@ -38,4 +41,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void UpdateBoid(float DeltaTime);
+
+private:
+	void DebugAvoidance();
 };

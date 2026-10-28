@@ -36,6 +36,22 @@ public:
 	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float Speed = 100.0f;
 
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	int NumAvoidancePoints = 200;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	float AvoidanceViewDistance = 600.0f;
+
+	// angle in degrees from forward vector
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	float ViewAngle = 90.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RuntimeDebug")
+	bool DebugAvoidanceInfo = false;
+
+	UFUNCTION()
+	TArray<FVector>& GetAvoidanceRays() { return AvoidanceRays; }
+
 	USceneComponent* transform;
 
 	TArray<class ABoids*> MyBoids;
@@ -48,5 +64,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	TArray<class ABoids*>GetBoidNeighbourHood(class ABoids* thisBoid);
-
+private:
+	TArray<FVector> AvoidanceRays;
+	void ComputeAvoidanceRays();
 };

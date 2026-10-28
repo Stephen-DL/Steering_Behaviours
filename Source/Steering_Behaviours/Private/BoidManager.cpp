@@ -11,6 +11,7 @@ ABoidManager::ABoidManager()
 	PrimaryActorTick.bCanEverTick = true;
 	transform = CreateDefaultSubobject<USceneComponent>("Root Scene Component");
 	this->SetRootComponent(transform);
+	ComputeAvoidanceRays();
 
 }
 
@@ -27,6 +28,26 @@ void ABoidManager::BeginPlay()
 		ABoids* newboid = GetWorld()->SpawnActor<ABoids>(SpawnLocation, SpawnRotation);
 		MyBoids.Add(newboid);
 		newboid->Manager = this;
+	}
+}
+
+void ABoidManager::ComputeAvoidanceRays()
+{
+	float GoldenRatio = (1 + FMath::Sqrt(5.0)) / 2;
+	float AngleIncrement = PI * 2 * GoldenRatio;
+
+	for (int x = 0; x < NumAvoidancePoints; x++)
+	{
+		float t = (float)x / NumAvoidancePoints;
+		float inclination = FMath::Acos(1 - 2 * t);
+		float azimuth = AngleIncrement * x;
+
+		float X = FMath::Sin(inclination) * FMath::Cos(azimuth);
+		float Y = FMath::Sin(inclination) * FMath::Sin(azimuth);
+		float Z = FMath::Cos(inclination);
+		FRotator Rotator = FRotator(-90.0, 0, 0);
+
+		AvoidanceRays.Add(Rotator.RotateVector(FVector(X, Y, Z)));
 	}
 }
 
