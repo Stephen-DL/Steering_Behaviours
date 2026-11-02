@@ -34,19 +34,31 @@ public:
 	float AlignmentWeight = 1.0f;
 
 	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	float Speed = 100.0f;
+	float MinSpeed = 400.0;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float MaxSpeed = 700.0;
 
 	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	int NumAvoidancePoints = 200;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float AvoidanceViewDistance = 600.0f;
 
 	// angle in degrees from forward vector
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	float ViewAngle = 90.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RuntimeDebug")
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float ObstacleAvoidanceFactor = 0.3f;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float CloseProximityObstacleRadius = 160.0f;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float CloseProximityObstacleAvoidanceFactor = 3.0f;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	bool DebugAvoidanceInfo = false;
 
 	UFUNCTION()

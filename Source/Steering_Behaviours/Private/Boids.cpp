@@ -23,7 +23,12 @@ ABoids::ABoids()
 void ABoids::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	Velocity = GetActorForwardVector();
+
+	if (Manager)
+	{
+		Velocity *= Manager->MaxSpeed;
+	}
 }
 
 FVector ABoids::Seek(FVector position)
@@ -111,6 +116,72 @@ FVector ABoids::Seperation(TArray<ABoids*> Neighbours)
 	return avgFlee;
 }
 
+FVector ABoids::CalculateObstacleAvoidance()
+{
+	// avoidance rays are at increasing angles from the boid forward direction.
+	// the idea is to iterate until a raycast doesn't intersect with an obstacle, and then steer in that direction.
+	TArray<FVector> Rays = Manager->GetAvoidanceRays();
+
+	FHitResult HitResult;
+	float FurthestUnobstructedDistance = 0.0f;
+	float ClosestObstructedDistance = std::numeric_limits<float>::max();
+	float CloseProximityMultiplier = 1.0;
+	FVector BestDirection = GetActorForwardVector();
+
+	ETraceTypeQuery TraceChannel = UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_GameTraceChannel1);
+	EDrawDebugTrace::Type DebugTraceType = EDrawDebugTrace::Type::None;
+	TArray<AActor*> ActorsToIgnore;
+
+	for (int x = 0; x < Rays.Num(); ++x)
+	{
+		// match rotation of ray to boid rotation
+		FVector WorldSpaceRay = GetTransform().GetRotation().RotateVector(Rays[x]);
+
+		float Angle = FMath::Acos(FVector::DotProduct(WorldSpaceRay, GetActorForwardVector()));
+
+		if (FMath::RadiansToDegrees(Angle) < Manager->ViewAngle)
+		{
+			bool TraceHit = UKismetSystemLibrary::SphereTraceSingle(GetWorld(), GetActorLocation(), GetActorLocation() + WorldSpaceRay * Manager->AvoidanceViewDistance,
+				50.0, TraceChannel, true, ActorsToIgnore, DebugTraceType, HitResult, true);
+
+			if (TraceHit)
+			{
+				if (Manager->DebugAvoidanceInfo)
+				{
+					DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + WorldSpaceRay * HitResult.Distance, FColor::Yellow, false, 1.0, 2.0);
+				}
+
+				// if an obstacle is too close, the avoidance force should be stronger
+				if (HitResult.Distance < Manager->CloseProximityObstacleRadius)
+				{
+					if (Manager->DebugAvoidanceInfo)
+					{
+						DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + WorldSpaceRay * HitResult.Distance, FColor::Red, false, 1.0, 2.0);
+					}
+
+					CloseProximityMultiplier = Manager->CloseProximityObstacleAvoidanceFactor;
+				}
+
+				if (HitResult.Distance > FurthestUnobstructedDistance)
+				{
+					BestDirection = WorldSpaceRay;
+					FurthestUnobstructedDistance = HitResult.Distance;
+				}
+			}
+			else
+			{
+				if (Manager->DebugAvoidanceInfo)
+				{
+					DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + WorldSpaceRay * Manager->AvoidanceViewDistance, FColor::Green, false, 1.0, 2.0);
+				}
+
+				return WorldSpaceRay * Manager->MaxSpeed * Manager->ObstacleAvoidanceFactor * CloseProximityMultiplier;
+			}
+		}
+	}
+	return BestDirection * Manager->MaxSpeed * Manager->ObstacleAvoidanceFactor * CloseProximityMultiplier;
+}
+
 // Called every frame
 void ABoids::Tick(float DeltaTime)
 {
@@ -124,7 +195,7 @@ void ABoids::Tick(float DeltaTime)
 
 void ABoids::UpdateBoid(float DeltaTime)
 {
-	FVector targetVelocity = FVector::ZeroVector;
+	FVector Heading = FVector::ZeroVector;
 	if (waitCounter > 0) 
 	{
 		waitCounter -= DeltaTime;
@@ -134,23 +205,46 @@ void ABoids::UpdateBoid(float DeltaTime)
 	
 	TArray<ABoids*> closestBoids = Manager->GetBoidNeighbourHood(this);
 
-	targetVelocity += Seperation(closestBoids) * Manager->SeperationWeight;
-	targetVelocity += Cohesion(closestBoids) * Manager->CohesionWeight;
-	targetVelocity += Alignment(closestBoids) * Manager->AlignmentWeight;
+	Heading += Seperation(closestBoids) * Manager->SeperationWeight;
+	Heading += Cohesion(closestBoids) * Manager->CohesionWeight;
+	Heading += Alignment(closestBoids) * Manager->AlignmentWeight;
+	
+	// obstacle avoidance heading
+	Heading += CalculateObstacleAvoidance();
 
-	targetVelocity.Normalize();
+	Velocity += Heading;
 
-	if (targetVelocity.Size() < 1.0f) 
+	// clamp speed and velocity
+	float Speed = Velocity.Length();
+
+	if (Speed == 0.0)
 	{
-		targetVelocity += Wander(100.0f, 200.0f, 50.0f);
-		targetVelocity.Normalize();
+		Velocity = GetActorForwardVector();
+		Speed = 1.0;
 	}
 
-	FVector newForce = targetVelocity - currentVelocity;
+	if (Speed < Manager->MinSpeed)
+	{
+		Velocity *= Manager->MinSpeed / Speed;
+	}
+	else if (Speed > Manager->MaxSpeed)
+	{
+		Velocity *= Manager->MaxSpeed / Speed;
+	}
+
+	Heading.Normalize();
+
+	if (Heading.Size() < 1.0f)
+	{
+		Heading += Wander(100.0f, 200.0f, 50.0f);
+		Heading.Normalize();
+	}
+
+	FVector newForce = Heading - currentVelocity;
 	currentVelocity += newForce * DeltaTime;
 
 	FVector location = GetActorLocation();
-	location += (currentVelocity * Manager->Speed * DeltaTime);
+	location += (currentVelocity * Speed * DeltaTime);
 
 	SetActorLocation(location);
 }

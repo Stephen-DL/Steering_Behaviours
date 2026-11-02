@@ -34,13 +34,17 @@ protected:
 	FVector Cohesion(TArray<ABoids*> Neighbours);
 	FVector Seperation(TArray<ABoids*> Neighbours);
 
+	FVector CalculateObstacleAvoidance();
+
 	UStaticMeshComponent* Mesh;
-	float Speed = 100.0f;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void UpdateBoid(float DeltaTime);
+
+	UPROPERTY(VisibleAnywhere)
+	FVector Velocity = FVector::Zero();
 
 private:
 	void DebugAvoidance();
